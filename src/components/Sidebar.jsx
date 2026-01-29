@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Home, Compass, Plus, Rocket, Zap, Settings as SettingsIcon, Menu } from 'lucide-react';
 
-const Sidebar = ({ onOpenSettings, onToggleMenu, onOpenFeature }) => {
+const Sidebar = ({ onOpenSettings, onOpenFeature }) => {
     const [active, setActive] = useState('home');
 
     const icons = [
@@ -13,10 +13,6 @@ const Sidebar = ({ onOpenSettings, onToggleMenu, onOpenFeature }) => {
 
     return (
         <div className="sidebar">
-            <div className="sidebar-icon mobile-only" onClick={onToggleMenu}>
-                <Menu size={28} color="var(--aura-primary)" />
-            </div>
-
             {icons.map(({ id, Icon, tooltip, color, action }) => (
                 <div
                     key={id}
@@ -30,7 +26,7 @@ const Sidebar = ({ onOpenSettings, onToggleMenu, onOpenFeature }) => {
 
             <div className="sidebar-separator" />
 
-            <div className="sidebar-icon" onClick={() => alert('Aura Energy: Infinite')}>
+            <div className="sidebar-icon" onClick={() => onOpenFeature('energy')}>
                 <Zap size={24} color="#f0b232" />
                 <div className="tooltip">Aura Energy</div>
             </div>

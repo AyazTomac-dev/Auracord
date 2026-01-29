@@ -68,6 +68,9 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
                 <div className={`settings-nav-item ${activeTab === 'appearance' ? 'active' : ''}`} onClick={() => setActiveTab('appearance')}>
                     Appearance
                 </div>
+                <div className={`settings-nav-item ${activeTab === 'vibe' ? 'active' : ''}`} onClick={() => setActiveTab('vibe')}>
+                    Aura Vibe
+                </div>
 
                 <div style={{ marginTop: 'auto', borderTop: '1px solid var(--glass-border)', paddingTop: '10px' }}>
                     <div className="settings-nav-item" style={{ color: '#f23f43' }} onClick={() => { localStorage.clear(); window.location.reload(); }}>
@@ -169,6 +172,33 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
                                         <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{t.name}</span>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'vibe' && (
+                        <div>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>Aura Vibe</h2>
+
+                            <div className="settings-card">
+                                <div className="settings-label">Glow Intensity</div>
+                                <input type="range" min="0" max="100" defaultValue="50" className="vibe-slider"
+                                    onChange={(e) => document.documentElement.style.setProperty('--aura-glow', `${e.target.value / 50}`)} />
+                                <div className="settings-hint">Control the spiritual radiance of your interface.</div>
+                            </div>
+
+                            <div className="settings-card">
+                                <div className="settings-label">Background Drift Speed</div>
+                                <input type="range" min="5" max="60" defaultValue="20" className="vibe-slider"
+                                    onChange={(e) => document.documentElement.style.setProperty('--drift-speed', `${e.target.value}s`)} />
+                                <div className="settings-hint">Adjust the temporal flow of background energies.</div>
+                            </div>
+
+                            <div className="settings-card">
+                                <div className="settings-label">Interface Transparency</div>
+                                <input type="range" min="5" max="95" defaultValue="15" className="vibe-slider"
+                                    onChange={(e) => document.documentElement.style.setProperty('--glass-alpha', `${e.target.value / 100}`)} />
+                                <div className="settings-hint">Dissolve the boundaries between your chat and the void.</div>
                             </div>
                         </div>
                     )}

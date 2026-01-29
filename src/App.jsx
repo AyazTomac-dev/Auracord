@@ -20,7 +20,6 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('auracord_theme') || 'aura');
   const [selectedPeer, setSelectedPeer] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [activeFeature, setActiveFeature] = useState(null);
 
   const {
@@ -76,19 +75,20 @@ function App() {
         </div>
       )}
 
-      <Sidebar onOpenSettings={() => setIsSettingsOpen(true)} onToggleMenu={() => setShowMobileMenu(!showMobileMenu)} />
+      <Sidebar
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenFeature={(type) => setActiveFeature(type)}
+      />
 
-      <div className={`channel-list-mobile-wrapper ${showMobileMenu ? 'mobile-show' : ''}`}>
-        <ChannelList
-          chats={friends}
-          onSelect={(id) => { setSelectedPeer(id); setShowMobileMenu(false); }}
-          selectedId={selectedPeer}
-          myId={myId}
-          onConnect={sendFriendRequest} // Connect now sends friend request
-          username={username}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-        />
-      </div>
+      <ChannelList
+        chats={friends}
+        onSelect={(id) => setSelectedPeer(id)}
+        selectedId={selectedPeer}
+        myId={myId}
+        onConnect={sendFriendRequest} // Connect now sends friend request
+        username={username}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
 
       <ChatArea
         selectedPeer={selectedPeer}

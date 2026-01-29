@@ -140,7 +140,6 @@ export const usePeer = (username, userId) => {
         const conn = peer.connect(remoteId, { reliable: true });
         conn.on('open', () => {
             conn.send({ type: 'friend-request', username });
-            setError("Friend request transmitted into the void.");
         });
         setupConnection(conn);
     };
