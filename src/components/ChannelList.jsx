@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { MessageSquare, Settings, Copy, Check, Plus, UserCircle, Edit3 } from 'lucide-react';
+import { MessageSquare, Settings, Copy, Check, Plus, Edit3 } from 'lucide-react';
 
-const ChannelList = ({ chats, onSelect, selectedId, myId, onConnect, username, onUsernameChange }) => {
+const ChannelList = ({ chats, onSelect, selectedId, myId, onConnect, username, onOpenSettings }) => {
     const [copied, setCopied] = useState(false);
     const [showConnect, setShowConnect] = useState(false);
-    const [showSettings, setShowSettings] = useState(false);
     const [remoteIdInput, setRemoteIdInput] = useState('');
-    const [newNameInput, setNewNameInput] = useState(username);
 
     const copyId = () => {
         if (!myId) return;
@@ -20,13 +18,6 @@ const ChannelList = ({ chats, onSelect, selectedId, myId, onConnect, username, o
             onConnect(remoteIdInput.trim());
             setRemoteIdInput('');
             setShowConnect(false);
-        }
-    };
-
-    const handleNameSave = () => {
-        if (newNameInput.trim()) {
-            onUsernameChange(newNameInput.trim());
-            setShowSettings(false);
         }
     };
 
@@ -96,24 +87,6 @@ const ChannelList = ({ chats, onSelect, selectedId, myId, onConnect, username, o
                 </div>
             )}
 
-            {showSettings && (
-                <div className="connect-modal">
-                    <h3 className="auracord-title">Identity Warp</h3>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>How shall the ethereal realms recognize you?</p>
-                    <input
-                        className="modal-input"
-                        placeholder="Identity..."
-                        value={newNameInput}
-                        onChange={(e) => setNewNameInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
-                    />
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                        <button onClick={() => setShowSettings(false)} style={{ background: 'transparent', color: 'white', border: 'none' }}>Keep Current</button>
-                        <button className="aura-btn" onClick={handleNameSave}>Ascend</button>
-                    </div>
-                </div>
-            )}
-
             <div style={{
                 padding: '10px',
                 display: 'flex',
@@ -127,12 +100,12 @@ const ChannelList = ({ chats, onSelect, selectedId, myId, onConnect, username, o
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden' }}>
                     <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-                        {username} <span className="user-badge">Soul</span>
+                        {username}
                     </div>
                     <div style={{ fontSize: '0.7rem', color: '#23a559' }}>Online</div>
                 </div>
-                <div className="clickable-icon" onClick={() => setShowSettings(true)}>
-                    <Edit3 size={16} color="var(--text-muted)" />
+                <div className="clickable-icon" onClick={onOpenSettings}>
+                    <Settings size={18} color="var(--text-muted)" />
                 </div>
             </div>
         </div>

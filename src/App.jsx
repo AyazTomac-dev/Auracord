@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import ChannelList from './components/ChannelList';
 import ChatArea from './components/ChatArea';
 import Auth from './components/Auth';
+import SettingsModal from './components/SettingsModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function App() {
@@ -13,7 +14,9 @@ function App() {
   });
 
   const [username, setUsername] = useState(() => user?.displayName || 'Aura Spirit');
+  const [lastChangeDate, setLastChangeDate] = useState(() => localStorage.getItem('auracord_last_name_change'));
   const [selectedPeer, setSelectedPeer] = useState(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const {
     myId, connections, messages, setMessages, connectToPeer,
@@ -42,6 +45,15 @@ function App() {
     (m.sender === selectedPeer && !m.isMe) || (m.recipient === selectedPeer && m.isMe)
   );
 
+  const handleUsernameChange = (newName) => {
+    setUsername(newName);
+    broadcastNameChange(newName);
+    const now = new Date().toISOString();
+    setLastChangeDate(now);
+    localStorage.setItem('auracord_last_name_change', now);
+    setUser({ ...user, displayName: newName });
+  };
+
   if (!user) {
     return <Auth onAuthComplete={handleAuthComplete} />;
   }
@@ -51,7 +63,7 @@ function App() {
       <div className="aura-bg-blob blob-1"></div>
       <div className="aura-bg-blob blob-2"></div>
 
-      <Sidebar />
+      <Sidebar onOpenSettings={() => setIsSettingsOpen(true)} />
 
       <ChannelList
         chats={activeChats}
@@ -60,11 +72,7 @@ function App() {
         myId={myId}
         onConnect={connectToPeer}
         username={username}
-        onUsernameChange={(newName) => {
-          setUsername(newName);
-          broadcastNameChange(newName);
-          setUser({ ...user, displayName: newName });
-        }}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       <ChatArea
@@ -75,6 +83,14 @@ function App() {
         peerName={activeChats.find(c => c.id === selectedPeer)?.name}
         onClearChat={clearMessages}
         onUpdateMessages={(newMsgs) => setMessages(newMsgs)}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        username={username}
+        lastChangeDate={lastChangeDate}
+        onUsernameChange={handleUsernameChange}
       />
 
       <AnimatePresence>
