@@ -16,6 +16,30 @@
   --channel-list-width: 240px;
 }
 
+[data-theme='midnight'] {
+  --aura-primary: #3b82f6;
+  --aura-secondary: #1e40af;
+  --bg-deep: #020617;
+  --bg-darker: #0f172a;
+  --bg-dark: #1e293b;
+}
+
+[data-theme='sunset'] {
+  --aura-primary: #f59e0b;
+  --aura-secondary: #dc2626;
+  --bg-deep: #1c0a0a;
+  --bg-darker: #2d0f0f;
+  --bg-dark: #401414;
+}
+
+[data-theme='emerald'] {
+  --aura-primary: #10b981;
+  --aura-secondary: #064e3b;
+  --bg-deep: #061111;
+  --bg-darker: #0d1f1f;
+  --bg-dark: #143232;
+}
+
 * {
   margin: 0;
   padding: 0;

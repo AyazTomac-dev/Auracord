@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, User, Shield, Bell, Lock, Palette, Globe, LogOut } from 'lucide-react';
+import { X, User, Shield, Bell, Lock, Palette, Globe, LogOut, Check } from 'lucide-react';
 
-const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChangeDate }) => {
+const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChangeDate, currentTheme, onThemeChange }) => {
     const [activeTab, setActiveTab] = useState('account');
     const [newName, setNewName] = useState(username);
     const [error, setError] = useState('');
+
+    const themes = [
+        { id: 'aura', name: 'Aura Classic', color: '#7c3aed' },
+        { id: 'midnight', name: 'Deep Midnight', color: '#3b82f6' },
+        { id: 'sunset', name: 'Crimson Sunset', color: '#dc2626' },
+        { id: 'emerald', name: 'Emerald Spirit', color: '#10b981' },
+    ];
 
     const canChangeName = () => {
         if (!lastChangeDate) return true;
         const now = new Date();
         const last = new Date(lastChangeDate);
-        const diff = (now - last) / (1000 * 60 * 60 * 24); // diff in days
+        const diff = (now - last) / (1000 * 60 * 60 * 24);
         return diff >= 7;
     };
 
@@ -32,8 +39,8 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
             onClose();
             return;
         }
-        if (newName.trim().length < 3) {
-            setError('Vibration sequence too short (min 3 chars).');
+        if (newName.trim().length < 2) {
+            setError('Vibration sequence too short.');
             return;
         }
         onUsernameChange(newName.trim());
@@ -52,9 +59,6 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
                 <div className={`settings-nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
                     User Profile
                 </div>
-                <div className={`settings-nav-item ${activeTab === 'privacy' ? 'active' : ''}`} onClick={() => setActiveTab('privacy')}>
-                    Privacy & Safety
-                </div>
 
                 <div className="settings-section-title">APP SETTINGS</div>
                 <div className={`settings-nav-item ${activeTab === 'appearance' ? 'active' : ''}`} onClick={() => setActiveTab('appearance')}>
@@ -62,9 +66,6 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
                 </div>
                 <div className={`settings-nav-item ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
                     Notifications
-                </div>
-                <div className={`settings-nav-item ${activeTab === 'language' ? 'active' : ''}`} onClick={() => setActiveTab('language')}>
-                    Language
                 </div>
 
                 <div style={{ marginTop: 'auto', borderTop: '1px solid var(--glass-border)', paddingTop: '10px' }}>
@@ -82,8 +83,8 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
                 </div>
 
                 <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     key={activeTab}
                 >
                     {activeTab === 'account' && (
@@ -97,7 +98,7 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
                                         </div>
                                         <div>
                                             <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{username}</div>
-                                            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Aura Pulse: Balanced</div>
+                                            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Aura Frequency: Stable</div>
                                         </div>
                                     </div>
                                 </div>
@@ -111,7 +112,7 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
                                     onChange={(e) => { setNewName(e.target.value); setError(''); }}
                                 />
                                 {error && <div className="error-text">{error}</div>}
-                                <div className="settings-hint">Identity can be altered once every 7 sun-cycles.</div>
+                                <div className="settings-hint">You can alter your ethereal identity once every 7 sun-cycles.</div>
 
                                 <div style={{ marginTop: '20px' }}>
                                     <button className="aura-btn" onClick={handleSave}>Save Changes</button>
@@ -122,24 +123,52 @@ const SettingsModal = ({ isOpen, onClose, username, onUsernameChange, lastChange
                                     )}
                                 </div>
                             </div>
+                        </div>
+                    )}
 
-                            <div className="settings-card">
-                                <div className="settings-label">Ethereal Key (Password)</div>
-                                <button className="aura-btn" style={{ background: 'var(--bg-dark)' }}>Change Key</button>
+                    {activeTab === 'appearance' && (
+                        <div>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>Appearance</h2>
+                            <div className="settings-label">Ethereal Themes</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '12px' }}>
+                                {themes.map(t => (
+                                    <div
+                                        key={t.id}
+                                        className={`settings-card ${currentTheme === t.id ? 'active' : ''}`}
+                                        style={{
+                                            margin: 0,
+                                            cursor: 'pointer',
+                                            border: currentTheme === t.id ? '2px solid var(--aura-primary)' : '1px solid var(--glass-border)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            position: 'relative'
+                                        }}
+                                        onClick={() => onThemeChange(t.id)}
+                                    >
+                                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: t.color }}></div>
+                                        <span style={{ fontWeight: 600 }}>{t.name}</span>
+                                        {currentTheme === t.id && (
+                                            <div style={{ position: 'absolute', right: 12 }}>
+                                                <Check size={16} color="var(--aura-primary)" />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
 
-                    {activeTab !== 'account' && (
+                    {['profile', 'notifications'].includes(activeTab) && (
                         <div style={{ textAlign: 'center', marginTop: '100px' }}>
                             <Shield size={64} color="var(--aura-primary)" style={{ opacity: 0.3, marginBottom: '20px' }} />
                             <h3 style={{ color: 'var(--text-muted)' }}>This spiritual plane is currently stabilizing.</h3>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Feature manifesting in future updates.</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Fully functional sync manifesting soon.</p>
                         </div>
                     )}
                 </motion.div>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 

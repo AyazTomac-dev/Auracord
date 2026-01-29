@@ -15,13 +15,19 @@ function App() {
 
   const [username, setUsername] = useState(() => user?.displayName || 'Aura Spirit');
   const [lastChangeDate, setLastChangeDate] = useState(() => localStorage.getItem('auracord_last_name_change'));
+  const [theme, setTheme] = useState(() => localStorage.getItem('auracord_theme') || 'aura');
   const [selectedPeer, setSelectedPeer] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const {
     myId, connections, messages, setMessages, connectToPeer,
-    sendMessage, sendReaction, broadcastNameChange, clearMessages, error
-  } = usePeer(username);
+    sendMessage, sendReaction, broadcastNameChange, clearMessages, error, setError
+  } = usePeer(username, user?.uid);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('auracord_theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     if (user) {
@@ -54,12 +60,10 @@ function App() {
     setUser({ ...user, displayName: newName });
   };
 
-  if (!user) {
-    return <Auth onAuthComplete={handleAuthComplete} />;
-  }
-
   return (
     <div className="app-container">
+      {!user && <Auth onAuthComplete={handleAuthComplete} />}
+
       <div className="aura-bg-blob blob-1"></div>
       <div className="aura-bg-blob blob-2"></div>
 
@@ -91,6 +95,8 @@ function App() {
         username={username}
         lastChangeDate={lastChangeDate}
         onUsernameChange={handleUsernameChange}
+        currentTheme={theme}
+        onThemeChange={setTheme}
       />
 
       <AnimatePresence>
@@ -100,13 +106,16 @@ function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             className="aura-glass"
+            onClick={() => setError(null)}
             style={{
-              position: 'fixed', bottom: 20, right: 20,
+              position: 'fixed', bottom: 20, right: 20, cursor: 'pointer',
               background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444',
-              color: '#ef4444', padding: '12px 24px', borderRadius: '8px', zIndex: 2000
+              color: 'white', padding: '12px 24px', borderRadius: '8px', zIndex: 30000,
+              backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
             }}
           >
-            Aura Error: {error}
+            {error}
+            <div style={{ fontSize: '0.7rem', marginTop: '4px', opacity: 0.7 }}>Click to vanish</div>
           </motion.div>
         )}
       </AnimatePresence>
