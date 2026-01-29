@@ -1,25 +1,47 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, ShieldCheck, Key } from 'lucide-react';
 
 const Auth = ({ onAuthComplete }) => {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
+    const [tfaCode, setTfaCode] = useState('');
+    const [showTfa, setShowTfa] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Security: Simulated 2FA Key
+    const SECURITY_KEY = "AURA-2FA-SECURE";
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setLoading(true);
-        // Simulate auth for demo, since we need real Firebase keys for actual work
-        // In a real app, you'd use signInWithEmailAndPassword or createUserWithEmailAndPassword here
+
+        if (isLogin && !showTfa) {
+            setTimeout(() => {
+                setShowTfa(true);
+                setLoading(false);
+            }, 1000);
+            return;
+        }
+
         setTimeout(() => {
-            onAuthComplete({
+            // Security: 2FA Validation
+            if (showTfa && tfaCode !== "123456") {
+                alert("Invalid Ethereal Key (2FA). Hint: 123456");
+                setLoading(false);
+                return;
+            }
+
+            const userData = {
                 email,
                 displayName: isLogin ? (localStorage.getItem('auracord_username') || 'AuraUser') : username,
-                uid: Math.random().toString(36).substr(2, 9)
-            });
+                uid: btoa(email).substr(0, 15), // Stable ID from email
+                isTfaEnabled: true
+            };
+
+            onAuthComplete(userData);
             setLoading(false);
         }, 1500);
     };
@@ -42,69 +64,54 @@ const Auth = ({ onAuthComplete }) => {
                     </div>
                     <h1 className="auracord-title" style={{ fontSize: '2rem' }}>Auracord</h1>
                     <p style={{ color: 'var(--text-muted)' }}>
-                        {isLogin ? 'Welcome back to the ethereal realm.' : 'Join columns of aura light.'}
+                        {showTfa ? '2-Step Verification Active' : (isLogin ? 'Ascend with your frequency.' : 'Initialize your soul signature.')}
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {!isLogin && (
+                    {!showTfa ? (
+                        <>
+                            {!isLogin && (
+                                <div className="chat-input-wrapper">
+                                    <User size={20} color="var(--text-muted)" style={{ marginRight: 12 }} />
+                                    <input className="chat-input" placeholder="Identity Name" required value={username} onChange={(e) => setUsername(e.target.value)} />
+                                </div>
+                            )}
+                            <div className="chat-input-wrapper">
+                                <Mail size={20} color="var(--text-muted)" style={{ marginRight: 12 }} />
+                                <input className="chat-input" type="email" placeholder="Soul Email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                            </div>
+                            <div className="chat-input-wrapper">
+                                <Lock size={20} color="var(--text-muted)" style={{ marginRight: 12 }} />
+                                <input className="chat-input" type="password" placeholder="Vibration Key" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                            </div>
+                        </>
+                    ) : (
                         <div className="chat-input-wrapper">
-                            <User size={20} color="var(--text-muted)" style={{ marginRight: 12 }} />
+                            <Key size={20} color="var(--aura-primary)" style={{ marginRight: 12 }} />
                             <input
                                 className="chat-input"
-                                placeholder="Spiritual Identity (Username)"
+                                placeholder="6-Digit Sync Code (123456)"
+                                maxLength={6}
                                 required
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                value={tfaCode}
+                                onChange={(e) => setTfaCode(e.target.value)}
                             />
                         </div>
                     )}
 
-                    <div className="chat-input-wrapper">
-                        <Mail size={20} color="var(--text-muted)" style={{ marginRight: 12 }} />
-                        <input
-                            className="chat-input"
-                            type="email"
-                            placeholder="Email frequency"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="chat-input-wrapper">
-                        <Lock size={20} color="var(--text-muted)" style={{ marginRight: 12 }} />
-                        <input
-                            className="chat-input"
-                            type="password"
-                            placeholder="Vibration Key (Password)"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                    </div>
-
-                    <button
-                        className="aura-btn"
-                        style={{ padding: '12px', fontSize: '1rem', marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                        disabled={loading}
-                    >
-                        {loading ? 'Manifesting...' : (isLogin ? 'Ascend' : 'Initialize')}
-                        <ArrowRight size={18} />
+                    <button className="aura-btn" disabled={loading} style={{ padding: '12px' }}>
+                        {loading ? 'Securing...' : (showTfa ? 'Verify Infinity' : (isLogin ? 'Ascend' : 'Create Signature'))}
                     </button>
                 </form>
 
-                <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.9rem' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>
-                        {isLogin ? "Don't have an frequency?" : "Already part of the light?"}
-                    </span>
-                    <button
-                        style={{ background: 'none', border: 'none', color: 'var(--aura-primary)', marginLeft: '8px', fontWeight: 600 }}
-                        onClick={() => setIsLogin(!isLogin)}
-                    >
-                        {isLogin ? 'Create one' : 'Connect now'}
-                    </button>
-                </div>
+                {!showTfa && (
+                    <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.9rem' }}>
+                        <button style={{ background: 'none', border: 'none', color: 'var(--aura-primary)', fontWeight: 600 }} onClick={() => setIsLogin(!isLogin)}>
+                            {isLogin ? 'Create new signature' : 'Already have a signal?'}
+                        </button>
+                    </div>
+                )}
             </motion.div>
         </div>
     );

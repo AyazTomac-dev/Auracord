@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Home, Compass, Plus, Rocket, Zap, Settings as SettingsIcon } from 'lucide-react';
+import { Home, Compass, Plus, Rocket, Zap, Settings as SettingsIcon, Menu } from 'lucide-react';
 
-const Sidebar = ({ onOpenSettings }) => {
+const Sidebar = ({ onOpenSettings, onToggleMenu }) => {
     const [active, setActive] = useState('home');
 
     const icons = [
@@ -13,6 +13,10 @@ const Sidebar = ({ onOpenSettings }) => {
 
     return (
         <div className="sidebar">
+            <div className="sidebar-icon mobile-only" onClick={onToggleMenu}>
+                <Menu size={28} color="var(--aura-primary)" />
+            </div>
+
             {icons.map(({ id, Icon, tooltip, color, action }) => (
                 <div
                     key={id}

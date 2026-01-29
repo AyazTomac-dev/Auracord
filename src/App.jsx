@@ -6,6 +6,7 @@ import ChatArea from './components/ChatArea';
 import Auth from './components/Auth';
 import SettingsModal from './components/SettingsModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { UserPlus, Check, X } from 'lucide-react';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -18,10 +19,13 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('auracord_theme') || 'aura');
   const [selectedPeer, setSelectedPeer] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const {
-    myId, connections, messages, setMessages, connectToPeer,
-    sendMessage, sendReaction, broadcastNameChange, clearMessages, error, setError
+    myId, connections, messages, setMessages, friends, pendingRequests,
+    sendFriendRequest, acceptFriend, sendMessage, sendReaction, broadcastNameChange, clearMessages,
+    error, setError,
+    startCall, answerCall, endCall, isCalling, incomingCall, localStream, remoteStream
   } = usePeer(username, user?.uid);
 
   useEffect(() => {
@@ -41,16 +45,6 @@ function App() {
     setUsername(userData.displayName);
   };
 
-  const activeChats = Object.keys(connections).map(id => ({
-    id,
-    name: connections[id].remoteUsername || 'Ethereal Being',
-    status: 'online'
-  }));
-
-  const filteredMessages = messages.filter(m =>
-    (m.sender === selectedPeer && !m.isMe) || (m.recipient === selectedPeer && m.isMe)
-  );
-
   const handleUsernameChange = (newName) => {
     setUsername(newName);
     broadcastNameChange(newName);
@@ -60,62 +54,70 @@ function App() {
     setUser({ ...user, displayName: newName });
   };
 
+  if (!user) return <Auth onAuthComplete={handleAuthComplete} />;
+
   return (
     <div className="app-container">
-      {!user && <Auth onAuthComplete={handleAuthComplete} />}
-
       <div className="aura-bg-blob blob-1"></div>
       <div className="aura-bg-blob blob-2"></div>
 
-      <Sidebar onOpenSettings={() => setIsSettingsOpen(true)} />
+      {pendingRequests.length > 0 && (
+        <div className="friend-request-toast aura-glass">
+          <UserPlus size={20} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{pendingRequests[0].name} wishes to sync.</div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Check className="clickable-icon" color="#23a559" onClick={() => acceptFriend(pendingRequests[0].id)} />
+            <X className="clickable-icon" color="#f23f43" />
+          </div>
+        </div>
+      )}
 
-      <ChannelList
-        chats={activeChats}
-        onSelect={setSelectedPeer}
-        selectedId={selectedPeer}
-        myId={myId}
-        onConnect={connectToPeer}
-        username={username}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-      />
+      <Sidebar onOpenSettings={() => setIsSettingsOpen(true)} onToggleMenu={() => setShowMobileMenu(!showMobileMenu)} />
+
+      <div className={`channel-list-mobile-wrapper ${showMobileMenu ? 'mobile-show' : ''}`}>
+        <ChannelList
+          chats={friends}
+          onSelect={(id) => { setSelectedPeer(id); setShowMobileMenu(false); }}
+          selectedId={selectedPeer}
+          myId={myId}
+          onConnect={sendFriendRequest} // Connect now sends friend request
+          username={username}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+      </div>
 
       <ChatArea
         selectedPeer={selectedPeer}
-        messages={filteredMessages}
+        messages={messages.filter(m => (m.sender === selectedPeer && !m.isMe) || (m.recipient === selectedPeer && m.isMe))}
         onSendMessage={(text) => sendMessage(selectedPeer, text)}
         onSendReaction={(msg, emoji) => sendReaction(selectedPeer, msg, emoji)}
-        peerName={activeChats.find(c => c.id === selectedPeer)?.name}
+        peerName={friends.find(c => c.id === selectedPeer)?.name}
         onClearChat={clearMessages}
         onUpdateMessages={(newMsgs) => setMessages(newMsgs)}
+        onStartCall={(video) => startCall(selectedPeer, video)}
+        onAnswerCall={answerCall}
+        onEndCall={endCall}
+        isCalling={isCalling}
+        incomingCall={incomingCall}
+        localStream={localStream}
+        remoteStream={remoteStream}
       />
 
       <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        username={username}
-        lastChangeDate={lastChangeDate}
-        onUsernameChange={handleUsernameChange}
-        currentTheme={theme}
-        onThemeChange={setTheme}
+        isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)}
+        username={username} lastChangeDate={lastChangeDate} onUsernameChange={handleUsernameChange}
+        currentTheme={theme} onThemeChange={setTheme}
+        user={user}
       />
 
       <AnimatePresence>
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="aura-glass"
-            onClick={() => setError(null)}
-            style={{
-              position: 'fixed', bottom: 20, right: 20, cursor: 'pointer',
-              background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444',
-              color: 'white', padding: '12px 24px', borderRadius: '8px', zIndex: 30000,
-              backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
-            }}
+          <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 50 }}
+            className="aura-error-toast" onClick={() => setError(null)}
           >
             {error}
-            <div style={{ fontSize: '0.7rem', marginTop: '4px', opacity: 0.7 }}>Click to vanish</div>
           </motion.div>
         )}
       </AnimatePresence>
