@@ -5,6 +5,7 @@ import ChannelList from './components/ChannelList';
 import ChatArea from './components/ChatArea';
 import Auth from './components/Auth';
 import SettingsModal from './components/SettingsModal';
+import { FeatureModal } from './components/FeatureModals';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserPlus, Check, X } from 'lucide-react';
 
@@ -20,6 +21,7 @@ function App() {
   const [selectedPeer, setSelectedPeer] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [activeFeature, setActiveFeature] = useState(null);
 
   const {
     myId, connections, messages, setMessages, friends, pendingRequests,
@@ -110,6 +112,12 @@ function App() {
         username={username} lastChangeDate={lastChangeDate} onUsernameChange={handleUsernameChange}
         currentTheme={theme} onThemeChange={setTheme}
         user={user}
+      />
+
+      <FeatureModal
+        isOpen={!!activeFeature}
+        onClose={() => setActiveFeature(null)}
+        type={activeFeature}
       />
 
       <AnimatePresence>

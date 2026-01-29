@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Home, Compass, Plus, Rocket, Zap, Settings as SettingsIcon, Menu } from 'lucide-react';
 
-const Sidebar = ({ onOpenSettings, onToggleMenu }) => {
+const Sidebar = ({ onOpenSettings, onToggleMenu, onOpenFeature }) => {
     const [active, setActive] = useState('home');
 
     const icons = [
         { id: 'home', Icon: Home, tooltip: 'Aura Home', color: 'inherit', action: () => setActive('home') },
-        { id: 'compass', Icon: Compass, tooltip: 'Explore Auras', color: 'inherit', action: () => alert('Exploration frequency synchronizing...') },
-        { id: 'aura-plus', Icon: Rocket, tooltip: 'Boost Aura', color: '#7c3aed', action: () => alert('Aura Boosting is manifesting.') },
-        { id: 'add', Icon: Plus, tooltip: 'Create Realm', color: '#23a559', action: () => alert('Realm creation initializing...') },
+        { id: 'compass', Icon: Compass, tooltip: 'Explore Auras', color: 'inherit', action: () => onOpenFeature('explore') },
+        { id: 'aura-plus', Icon: Rocket, tooltip: 'Boost Aura', color: '#7c3aed', action: () => onOpenFeature('boost') },
+        { id: 'add', Icon: Plus, tooltip: 'Create Realm', color: '#23a559', action: () => onOpenFeature('create') },
     ];
 
     return (
