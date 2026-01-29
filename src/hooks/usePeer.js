@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Peer } from 'peerjs';
 import { v4 as uuidv4 } from 'uuid';
+import { sanitize, detectInjection } from '../utils/security';
 
 export const usePeer = (username, userId) => {
     const [peer, setPeer] = useState(null);
@@ -16,6 +17,10 @@ export const usePeer = (username, userId) => {
     });
     const [error, setError] = useState(null);
     const [pendingRequests, setPendingRequests] = useState([]);
+    const [auraEnergy, setAuraEnergy] = useState(() => {
+        const saved = localStorage.getItem('auracord_energy');
+        return saved ? parseInt(saved) : 100;
+    });
 
     // Rate limiting
     const lastMsgTime = useRef(0);
@@ -31,7 +36,8 @@ export const usePeer = (username, userId) => {
     useEffect(() => {
         localStorage.setItem('auracord_messages', JSON.stringify(messages));
         localStorage.setItem('auracord_friends', JSON.stringify(friends));
-    }, [messages, friends]);
+        localStorage.setItem('auracord_energy', auraEnergy.toString());
+    }, [messages, friends, auraEnergy]);
 
     useEffect(() => {
         if (!userId) return;
@@ -49,7 +55,6 @@ export const usePeer = (username, userId) => {
         newPeer.on('open', (id) => setMyId(id));
         newPeer.on('connection', (conn) => setupConnection(conn));
         newPeer.on('call', (call) => {
-            // Security: Only answer calls from friends
             if (friends.some(f => f.id === call.peer)) {
                 setIncomingCall(call);
             } else {
@@ -69,12 +74,10 @@ export const usePeer = (username, userId) => {
     const setupConnection = useCallback((conn) => {
         conn.on('open', () => {
             setConnections((prev) => ({ ...prev, [conn.peer]: conn }));
-            // Send handshake
             conn.send({ type: 'handshake', username, isFriend: friends.some(f => f.id === conn.peer) });
         });
 
         conn.on('data', (data) => {
-            // Security: Basic Sanitation
             if (typeof data !== 'object') return;
 
             switch (data.type) {
@@ -90,13 +93,19 @@ export const usePeer = (username, userId) => {
                     break;
 
                 case 'message':
-                    // Security: FRIENDS ONLY
                     if (friends.some(f => f.id === conn.peer)) {
+                        const isMalicious = detectInjection(data.text);
+                        if (isMalicious) {
+                            setError("High-frequency interference detected (Malicious Pattern Blocked).");
+                            return;
+                        }
+
+                        setAuraEnergy(prev => prev + 5);
                         setMessages((prev) => [...prev, {
                             id: uuidv4(),
                             sender: conn.peer,
-                            senderName: data.username,
-                            text: data.text.substring(0, 2000), // Max length security
+                            senderName: sanitize(data.username),
+                            text: sanitize(data.text).substring(0, 2000),
                             timestamp: new Date().toISOString(),
                             isMe: false
                         }]);
@@ -153,8 +162,11 @@ export const usePeer = (username, userId) => {
         setPendingRequests(prev => prev.filter(p => p.id !== requestId));
     };
 
+    const rejectFriend = (requestId) => {
+        setPendingRequests(prev => prev.filter(p => p.id !== requestId));
+    };
+
     const sendMessage = useCallback((remoteId, text) => {
-        // Security: Rate Limiting (Anti-spam)
         const now = Date.now();
         if (now - lastMsgTime.current < 1000) {
             msgCount.current++;
@@ -167,7 +179,6 @@ export const usePeer = (username, userId) => {
         }
         lastMsgTime.current = now;
 
-        // Security: Friends Only Check
         if (!friends.some(f => f.id === remoteId)) {
             setError("Soul sync required. Must be friends to chant.");
             return;
@@ -176,6 +187,7 @@ export const usePeer = (username, userId) => {
         const conn = connections[remoteId];
         if (conn && conn.open) {
             conn.send({ type: 'message', text, username });
+            setAuraEnergy(prev => prev + 10);
             setMessages((prev) => [...prev, {
                 id: uuidv4(),
                 sender: myId,
@@ -188,7 +200,6 @@ export const usePeer = (username, userId) => {
         }
     }, [connections, myId, username, friends]);
 
-    // Audio/Video logic restricted to friends
     const startCall = async (remoteId, video = false) => {
         if (!friends.some(f => f.id === remoteId)) return;
         try {
@@ -212,8 +223,8 @@ export const usePeer = (username, userId) => {
     };
 
     return {
-        myId, connections, messages, friends, pendingRequests,
-        sendFriendRequest, acceptFriend, sendMessage,
+        myId, connections, messages, friends, pendingRequests, auraEnergy,
+        sendFriendRequest, acceptFriend, rejectFriend, sendMessage,
         startCall, answerCall: async () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
             setLocalStream(stream);

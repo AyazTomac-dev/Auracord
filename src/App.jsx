@@ -23,8 +23,8 @@ function App() {
   const [activeFeature, setActiveFeature] = useState(null);
 
   const {
-    myId, connections, messages, setMessages, friends, pendingRequests,
-    sendFriendRequest, acceptFriend, sendMessage, sendReaction, broadcastNameChange, clearMessages,
+    myId, connections, messages, setMessages, friends, pendingRequests, auraEnergy,
+    sendFriendRequest, acceptFriend, rejectFriend, sendMessage, sendReaction, broadcastNameChange, clearMessages,
     error, setError,
     startCall, answerCall, endCall, isCalling, incomingCall, localStream, remoteStream
   } = usePeer(username, user?.uid);
@@ -70,7 +70,7 @@ function App() {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <Check className="clickable-icon" color="#23a559" onClick={() => acceptFriend(pendingRequests[0].id)} />
-            <X className="clickable-icon" color="#f23f43" />
+            <X className="clickable-icon" color="#f23f43" onClick={() => rejectFriend(pendingRequests[0].id)} />
           </div>
         </div>
       )}
@@ -118,6 +118,7 @@ function App() {
         isOpen={!!activeFeature}
         onClose={() => setActiveFeature(null)}
         type={activeFeature}
+        energy={auraEnergy}
       />
 
       <AnimatePresence>

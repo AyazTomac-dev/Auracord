@@ -2,12 +2,26 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Rocket, Sparkles, Plus, Users, Hash, Zap, ShieldCheck, Heart, Diamond } from 'lucide-react';
 
-export const FeatureModal = ({ isOpen, onClose, type }) => {
+export const FeatureModal = ({ isOpen, onClose, type, energy = 0 }) => {
     const [actionState, setActionState] = useState(null);
+    const [realmName, setRealmName] = useState('');
 
     if (!isOpen) return null;
 
     const handleAction = (label) => {
+        if (type === 'create' && label === 'create-main') {
+            if (!realmName.trim()) return;
+            setActionState('manifesting');
+            setTimeout(() => {
+                setActionState('success');
+                setTimeout(() => {
+                    onClose();
+                    setRealmName('');
+                    setActionState(null);
+                }, 1500);
+            }, 1000);
+            return;
+        }
         setActionState(label);
         setTimeout(() => setActionState(null), 2000);
     };
@@ -44,14 +58,15 @@ export const FeatureModal = ({ isOpen, onClose, type }) => {
             icon: Zap,
             desc: 'Your current spiritual resonance status.',
             stats: [
-                { label: 'Energy Level', value: 'Infinite', icon: Zap, color: '#f0b232' },
+                { label: 'Energy Level', value: energy.toString(), icon: Zap, color: '#f0b232' },
                 { label: 'Sync Status', value: 'Harmonized', icon: ShieldCheck, color: '#23a559' },
-                { label: 'Rank', value: 'Ethereal Creator', icon: Diamond, color: '#7c3aed' }
+                { label: 'Rank', value: energy > 500 ? 'Transcendent' : 'Aura Spirit', icon: Diamond, color: '#7c3aed' }
             ]
         }
     };
 
     const data = content[type] || content.energy;
+    if (!data) return null; // Safety check
     const Icon = data.icon;
 
     return (
@@ -117,7 +132,13 @@ export const FeatureModal = ({ isOpen, onClose, type }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div className="settings-card" style={{ margin: 0 }}>
                             <div className="settings-label">Realm Signature</div>
-                            <input className="settings-input" placeholder="Frequency name (e.g. Zen Den)" style={{ fontSize: '1.1rem', padding: '12px' }} />
+                            <input
+                                className="settings-input"
+                                placeholder="Frequency name (e.g. Zen Den)"
+                                style={{ fontSize: '1.1rem', padding: '12px' }}
+                                value={realmName}
+                                onChange={(e) => setRealmName(e.target.value)}
+                            />
                         </div>
                         <div className="settings-card" style={{ margin: 0 }}>
                             <div className="settings-label">Aura Frequency</div>
@@ -127,8 +148,18 @@ export const FeatureModal = ({ isOpen, onClose, type }) => {
                                 ))}
                             </div>
                         </div>
-                        <button className="aura-btn" style={{ padding: '16px', fontSize: '1.1rem' }} onClick={() => handleAction('create-main')}>
-                            {actionState === 'create-main' ? 'Manifesting...' : 'Manifest Realm'}
+                        <button
+                            className="aura-btn"
+                            style={{
+                                padding: '16px',
+                                fontSize: '1.1rem',
+                                background: actionState === 'success' ? '#23a559' : 'var(--aura-gradient)'
+                            }}
+                            onClick={() => handleAction('create-main')}
+                        >
+                            {actionState === 'manifesting' ? 'Manifesting...' :
+                                actionState === 'success' ? 'Realm Manifested ✨' :
+                                    'Manifest Realm'}
                         </button>
                     </div>
                 )}
